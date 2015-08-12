@@ -16,7 +16,6 @@ Gem::Specification.new do |s|
   s.files            += Dir.glob("templates/**/*")
   s.files            += Dir.glob("views/**/*")
   
-  s.add_dependency('gollum')
   s.add_dependency('omniauth')
   s.add_dependency('mustache', '>= 0.99.5')
   
