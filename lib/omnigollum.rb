@@ -49,9 +49,7 @@ module Omnigollum
     end
 
     def kick_back
-      redirect !request.referrer.nil? && request.referrer !~ /#{Regexp.escape(settings.send(:omnigollum)[:route_prefix])}\/.*/ ?
-        request.referrer:
-        '/'
+      redirect '/'
       halt
     end
 
