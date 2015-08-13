@@ -41,6 +41,24 @@ module Omnigollum
     def user_authed?
       session.has_key? :omniauth_user
     end
+    
+    def user_authorized?
+      user = get_user
+      options = settings.send(:omnigollum)
+      
+      return false unless session.has_key? :omniauth_user
+      
+      case (authorized_users = options[:authorized_users])
+      when Regexp
+        user_authorized = (user.email =~ authorized_users)
+      when Array
+        user_authorized = authorized_users.include?(user.email) || authorized_users.include?(user.nickname)
+      else
+        user_authorized = true
+      end
+      
+      user_authorized
+    end
 
     def user_auth
       @title   = 'Authentication is required'
@@ -221,6 +239,7 @@ module Omnigollum
       # Populates instance variables used to display currently logged in user
       app.before '/*' do
         @user_authed = user_authed?
+        @user_authorized = user_authorized?
         @user        = get_user
       end
 
@@ -254,23 +273,6 @@ module Omnigollum
         begin
           if !request.env['omniauth.auth'].nil?
             user = Omnigollum::Models::OmniauthUser.new(request.env['omniauth.auth'], options)
-
-            case (authorized_users = options[:authorized_users])
-            when Regexp
-              user_authorized = (user.email =~ authorized_users)
-            when Array
-              user_authorized = authorized_users.include?(user.email) || authorized_users.include?(user.nickname)
-            else
-              user_authorized = true
-            end
-
-            # Check authorized users
-            if !user_authorized
-              @title   = 'Authorization failed'
-              @subtext = 'User was not found in the authorized users list'
-              @auth_params = "?origin=#{CGI.escape(request.env['omniauth.origin'])}" unless request.env['omniauth.origin'].nil?
-              show_error
-            end
 
             session[:omniauth_user] = user
 
